@@ -1,4 +1,4 @@
-package com.neeeel.water_drinking_assistant.component
+package com.neeeel.water_drinking_assistant.ui.component
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
