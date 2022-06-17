@@ -1,11 +1,13 @@
 package com.neeeel.water_drinking_assistant.component
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,8 +15,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun TopBar(
-    onClickActionButton: () -> Unit = {},
-    onClickNavigationButton: () -> Unit = {}
+    onOpenSetting: () -> Unit = {},
+    onAddClock: () -> Unit = {},
 ) {
     Column(modifier = Modifier.background(MaterialTheme.colorScheme.primary)) {
 
@@ -24,27 +26,25 @@ fun TopBar(
 
         SmallTopAppBar(
             title = { Text("Assistant") },
-            navigationIcon = {
-                IconButton(onClick = onClickNavigationButton) {
-                    Icon(
-                        imageVector = Icons.Filled.Notifications,
-                        contentDescription = null
-                    )
-                }
-            },
             actions = {
-                IconButton(onClick = onClickActionButton) {
+                IconButton(onClick = onAddClock) {
                     Icon(
                         imageVector = Icons.Filled.Add,
+                        contentDescription = "Localized description"
+                    )
+                }
+                IconButton(onClick = onOpenSetting) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
                         contentDescription = "Localized description"
                     )
                 }
             },
             colors = TopAppBarDefaults.smallTopAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = MaterialTheme.colorScheme.primaryContainer,
-                navigationIconContentColor = MaterialTheme.colorScheme.primaryContainer,
-                actionIconContentColor = MaterialTheme.colorScheme.primaryContainer,
+                titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                navigationIconContentColor = MaterialTheme.colorScheme.onSecondary,
+                actionIconContentColor = MaterialTheme.colorScheme.onSecondary,
             )
         )
     }
