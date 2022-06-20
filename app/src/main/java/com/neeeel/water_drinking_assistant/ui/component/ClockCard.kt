@@ -15,11 +15,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.neeeel.water_drinking_assistant.database.bean.Clock
 
 @Composable
 fun ClockCard(
-    title: String = "标题",
-    min: Int = 0,
+    clock: Clock,
     onDelete: () -> Unit = {},
     onEdit: () -> Unit = {}
 ) {
@@ -50,17 +50,17 @@ fun ClockCard(
                     )
                     Box(modifier = Modifier.align(Alignment.CenterVertically)) {
                         Text(
-                            text = title,
+                            text = clock.title,
                             color = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.padding(start = 10.dp),
-                            maxLines = 1,
+                            maxLines = clock.maxLines,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
                 }
                 Box(modifier = Modifier.padding(top = 5.dp)) {
                     Text(
-                        text = "$min Min",
+                        text = "${clock.interval} Min",
                         color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.displayMedium,

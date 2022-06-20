@@ -19,7 +19,7 @@ class MyViewModel: ViewModel() {
         return clocks
     }
 
-    fun load() {
-        thread { clocks.postValue(RoomDb.INSTANCE.clockDao().all()) }
+    fun load() = thread {
+        clocks.postValue(RoomDb.INSTANCE.clockDao().all())
     }
 }

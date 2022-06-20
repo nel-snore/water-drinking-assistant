@@ -2,94 +2,89 @@ package com.neeeel.water_drinking_assistant.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color.Companion.Transparent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
-import androidx.lifecycle.Observer
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.neeeel.water_drinking_assistant.database.MyDataStore.INIT
+import com.neeeel.water_drinking_assistant.database.MyDataStore
+import com.neeeel.water_drinking_assistant.database.RoomDb
+import com.neeeel.water_drinking_assistant.database.bean.Clock
 import com.neeeel.water_drinking_assistant.ui.component.ClockCard
 import com.neeeel.water_drinking_assistant.ui.component.Dialog
 import com.neeeel.water_drinking_assistant.ui.component.TopBar
-import com.neeeel.water_drinking_assistant.database.RoomDb
-import com.neeeel.water_drinking_assistant.database.bean.Clock
-import com.neeeel.water_drinking_assistant.database.dataStore
-import com.neeeel.water_drinking_assistant.database.getInt
 import com.neeeel.water_drinking_assistant.ui.theme.WaterdrinkingassistantTheme
 import com.neeeel.water_drinking_assistant.viewmodel.MyViewModel
-import kotlinx.coroutines.runBlocking
+import kotlin.concurrent.thread
 
-class MainActivity : ComponentActivity() {
+class MainActivity : BaseActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
     }
 
+    private val myViewModel: MyViewModel by viewModels()
+
+    private val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        myViewModel.load()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        WindowCompat.setDecorFitsSystemWindows(window, true)
-        window.setFlags(FLAG_LAYOUT_NO_LIMITS, FLAG_LAYOUT_NO_LIMITS)
-
         setContent {
-            rememberSystemUiController().setStatusBarColor(Transparent, false)
             WaterdrinkingassistantTheme {
-                Content(
-                    onStartSettingActivity = {
-                        val intent = Intent().apply {
-                            action = "android.settings.APP_NOTIFICATION_SETTINGS"
-                            putExtra("app_package", packageName)
-                            putExtra("app_uid", applicationInfo.uid)
-                            putExtra("android.provider.extra.APP_PACKAGE", packageName)
-                        }
-                        startActivity(intent)
-                    }
-                )
+                Content {
+                    val intent = Intent(this, AddNewClockActivity::class.java)
+                    launcher.launch(intent)
+                }
             }
         }
 
-        runBlocking {
-            dataStore.getInt(INIT).collect {
-
-            }
-        }
-
-
-        val viewModel: MyViewModel by viewModels()
-        viewModel.getClocks().observe(this) {
-            Log.d(TAG, "onCreate: $it")
-        }
-        viewModel.load()
+        initList()
     }
 
-
-    private fun initClockList() {
-        val dao = RoomDb.INSTANCE.clockDao()
-
-        if (dao.count() <= 0) {
-            dao.insert(Clock(title = "提醒喝水小助手", interval = 30))
+    /**
+     * 应用初次启动时初始化显示列表
+     */
+    private fun initList() = thread {
+        val initDatabase = MyDataStore.getData("init_database", false)
+        if (initDatabase) {
+            return@thread
         }
+        // 初始化一条数据
+        val clock = Clock(
+            title = "我在这里放了一杯水，希望等我回来的时候，能看见你已经把它喝完了.jpg",
+            interval = 30,
+            maxLines = 5
+        )
+        RoomDb.INSTANCE.clockDao().insert(clock)
+        MyDataStore.putData("init_database", true)
 
+        myViewModel.load()
     }
 }
 
 @Composable
-fun Content(
-    onStartSettingActivity: () -> Unit = {}
+private fun Content(
+    onAddNewClock: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
     var openDialog      by remember { mutableStateOf(false) }
     var dialogTitle     by remember { mutableStateOf("Title") }
     var dialogContent   by remember { mutableStateOf("Content") }
@@ -111,32 +106,50 @@ fun Content(
         )
     }
 
-    val list = mutableListOf<String>()
-    for (i in 1..100) {
-        list.add(i.toString())
-    }
-
-    Column(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
+    Column {
         // 顶部导航栏
-        TopBar(
-            // 打开通知权限页面
-            onOpenSetting = {
-                dialogTitle = "允许通知"
-                dialogContent = "提醒功能需要开启“允许通知”"
-                onDialogConfirm = onStartSettingActivity
-                openDialog = true
-            },
-            onAddClock = {
-
+        TopBar {
+            // 添加新提醒
+            IconButton(onClick = onAddNewClock) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Localized description"
+                )
             }
-        )
+            // 打开通知权限页面
+            IconButton(
+                onClick = {
+                    dialogTitle = "允许通知"
+                    dialogContent = "提醒功能需要开启“允许通知”"
+                    onDialogConfirm = {
+                        val intent = Intent().apply {
+                            action = "android.settings.APP_NOTIFICATION_SETTINGS"
+                            putExtra("app_package", context.packageName)
+                            putExtra("app_uid", context.applicationInfo.uid)
+                            putExtra("android.provider.extra.APP_PACKAGE", context.packageName)
+                        }
+                        context.startActivity(intent)
+                    }
+                    openDialog = true
+                }) {
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = "Localized description"
+                )
+            }
+        }
 
-        // 内容
-        Column(modifier = Modifier
-            .weight(1.0.toFloat())
-            .padding(10.dp, 0.dp)
-        ) {
-            ClockCard()
+        val viewModel: MyViewModel = viewModel()
+        viewModel.getClocks().observeAsState().value?.let {
+            // 内容
+            LazyColumn(modifier = Modifier
+                .weight(1.0.toFloat())
+                .padding(10.dp, 0.dp)
+            ) {
+                items(it) { item ->
+                    ClockCard(item)
+                }
+            }
         }
     }
 }
