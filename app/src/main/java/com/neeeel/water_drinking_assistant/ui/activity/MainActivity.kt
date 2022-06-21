@@ -48,13 +48,11 @@ class MainActivity : BaseActivity() {
 
         setContent {
             WaterdrinkingassistantTheme {
-                Content {
-                    val intent = Intent(this, AddNewClockActivity::class.java)
-                    launcher.launch(intent)
+                Content { i ->
+                    launcher.launch(i)
                 }
             }
         }
-
         initList()
     }
 
@@ -77,85 +75,103 @@ class MainActivity : BaseActivity() {
 
         myViewModel.load()
     }
-}
 
-@Composable
-private fun Content(
-    onAddNewClock: () -> Unit = {}
-) {
-    val context = LocalContext.current
+    @Composable
+    private fun Content(
+        onAddNewClock: (intent: Intent) -> Unit = {}
+    ) {
+        val context = LocalContext.current
+        val dao = RoomDb.INSTANCE.clockDao()
 
-    var openDialog      by remember { mutableStateOf(false) }
-    var dialogTitle     by remember { mutableStateOf("Title") }
-    var dialogContent   by remember { mutableStateOf("Content") }
-    var onDialogConfirm by remember { mutableStateOf({}) }
+        var openDialog      by remember { mutableStateOf(false) }
+        var dialogTitle     by remember { mutableStateOf("Title") }
+        var dialogContent   by remember { mutableStateOf("Content") }
+        var onDialogConfirm by remember { mutableStateOf({}) }
 
-    if (openDialog) {
-        Dialog(
-            dialogTitle,
-            dialogContent,
-            onConfirm = {
-                openDialog = false
-                onDialogConfirm()
-                onDialogConfirm = {}
-            },
-            onDismiss = {
-                openDialog = false
-                onDialogConfirm = {}
-            }
-        )
-    }
-
-    Column {
-        // 顶部导航栏
-        TopBar {
-            // 添加新提醒
-            IconButton(onClick = onAddNewClock) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "Localized description"
-                )
-            }
-            // 打开通知权限页面
-            IconButton(
-                onClick = {
-                    dialogTitle = "允许通知"
-                    dialogContent = "提醒功能需要开启“允许通知”"
-                    onDialogConfirm = {
-                        val intent = Intent().apply {
-                            action = "android.settings.APP_NOTIFICATION_SETTINGS"
-                            putExtra("app_package", context.packageName)
-                            putExtra("app_uid", context.applicationInfo.uid)
-                            putExtra("android.provider.extra.APP_PACKAGE", context.packageName)
-                        }
-                        context.startActivity(intent)
-                    }
-                    openDialog = true
-                }) {
-                Icon(
-                    imageVector = Icons.Filled.Info,
-                    contentDescription = "Localized description"
-                )
-            }
+        if (openDialog) {
+            Dialog(
+                dialogTitle,
+                dialogContent,
+                onConfirm = {
+                    openDialog = false
+                    onDialogConfirm()
+                    onDialogConfirm = {}
+                },
+                onDismiss = {
+                    openDialog = false
+                    onDialogConfirm = {}
+                }
+            )
         }
 
-        val viewModel: MyViewModel = viewModel()
-        viewModel.getClocks().observeAsState().value?.let {
-            // 内容
-            LazyColumn(modifier = Modifier
-                .weight(1.0.toFloat())
-                .padding(10.dp, 0.dp)
-            ) {
-                items(it) { item ->
-                    ClockCard(item)
+        Column {
+            // 顶部导航栏
+            TopBar {
+                // 添加新提醒
+                IconButton(onClick = {
+                    onAddNewClock(Intent(context, AddNewClockActivity::class.java))
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Localized description"
+                    )
+                }
+                // 打开通知权限页面
+                IconButton(
+                    onClick = {
+                        dialogTitle = "允许通知"
+                        dialogContent = "提醒功能需要开启“允许通知”"
+                        onDialogConfirm = {
+                            val intent = Intent().apply {
+                                action = "android.settings.APP_NOTIFICATION_SETTINGS"
+                                putExtra("app_package", context.packageName)
+                                putExtra("app_uid", context.applicationInfo.uid)
+                                putExtra("android.provider.extra.APP_PACKAGE", context.packageName)
+                            }
+                            context.startActivity(intent)
+                        }
+                        openDialog = true
+                    }) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = "Localized description"
+                    )
+                }
+            }
+
+            val viewModel: MyViewModel = viewModel()
+            viewModel.getClocks().observeAsState().value?.let {
+                // 内容
+                LazyColumn(modifier = Modifier
+                    .weight(1.0.toFloat())
+                    .padding(10.dp, 0.dp)
+                ) {
+                    items(it) { item ->
+                        ClockCard(
+                            clock = item,
+                            onDelete = {
+                                thread {
+                                    dao.delete(item)
+                                    viewModel.load()
+                                    "已删除".toast()
+                                }
+                            },
+                            onEdit = {
+                                val intent = Intent(context, AddNewClockActivity::class.java).apply {
+                                    putExtra("id", item.id)
+                                }
+                                onAddNewClock(intent)
+                            }
+                        )
+                    }
                 }
             }
         }
     }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    Content()
+    @Preview(showBackground = true)
+    @Composable
+    fun DefaultPreview() {
+        Content()
+    }
 }

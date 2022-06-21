@@ -9,17 +9,17 @@ import kotlin.concurrent.thread
 
 class MyViewModel: ViewModel() {
 
-    private val clocks: MutableLiveData<List<Clock>> by lazy {
+    private val allClocks: MutableLiveData<List<Clock>> by lazy {
         MutableLiveData<List<Clock>>().also {
             load()
         }
     }
 
     fun getClocks(): LiveData<List<Clock>> {
-        return clocks
+        return allClocks
     }
 
     fun load() = thread {
-        clocks.postValue(RoomDb.INSTANCE.clockDao().all())
+        allClocks.postValue(RoomDb.INSTANCE.clockDao().all())
     }
 }

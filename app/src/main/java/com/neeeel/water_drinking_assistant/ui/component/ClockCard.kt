@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.neeeel.water_drinking_assistant.database.bean.Clock
@@ -102,7 +103,12 @@ fun ClockCard(
                                 Icons.Outlined.Edit,
                                 contentDescription = null
                             )
-                        })
+                        },
+                        colors = MenuDefaults.itemColors(
+                            textColor = MaterialTheme.colorScheme.tertiary,
+                            leadingIconColor = MaterialTheme.colorScheme.tertiary
+                        )
+                    )
                     DropdownMenuItem(
                         text = { Text("删除") },
                         onClick = {
@@ -114,10 +120,20 @@ fun ClockCard(
                                 Icons.Outlined.Delete,
                                 contentDescription = null
                             )
-                        }
+                        },
+                        colors = MenuDefaults.itemColors(
+                            textColor = MaterialTheme.colorScheme.error,
+                            leadingIconColor = MaterialTheme.colorScheme.error
+                        )
                     )
                 }
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun PreviewClockCard() {
+    ClockCard(clock = Clock())
 }

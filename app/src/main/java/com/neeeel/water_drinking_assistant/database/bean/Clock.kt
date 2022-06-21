@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class Clock(
     @PrimaryKey(autoGenerate = true)
     var id: Long? = null,
-    var title: String = "",
-    var interval: Int = Int.MAX_VALUE,
+    var title: String = "Title",
+    var interval: Int = 100,
     var maxLines: Int = 2
 )
