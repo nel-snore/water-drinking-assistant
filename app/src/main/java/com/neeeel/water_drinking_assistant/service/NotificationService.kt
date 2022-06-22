@@ -30,6 +30,7 @@ class NotificationService : Service() {
     }
 
     private val clockList = ClockList()
+    private lateinit var timer: Timer
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i(TAG, "服务启动")
@@ -45,7 +46,11 @@ class NotificationService : Service() {
     }
 
     private fun start() {
-        Timer().scheduleAtFixedRate(object : TimerTask() {
+        if (this::timer.isInitialized) {
+            return
+        }
+        timer = Timer()
+        timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 val notifyList = clockList.addCount()
                 clockList.compare(RoomDb.INSTANCE.clockDao().all())
@@ -63,6 +68,18 @@ class NotificationService : Service() {
                 notification(sb.toString())
             }
         }, ONE_MIN, ONE_MIN)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        try {
+            if (this::timer.isInitialized) {
+                timer.cancel()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun notification(content: String) {

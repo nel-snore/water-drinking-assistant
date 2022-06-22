@@ -1,7 +1,9 @@
 package com.neeeel.water_drinking_assistant
 
 import android.app.Application
+import android.content.Intent
 import com.neeeel.water_drinking_assistant.database.RoomDb
+import com.neeeel.water_drinking_assistant.service.NotificationService
 
 class App: Application() {
 
@@ -17,5 +19,7 @@ class App: Application() {
 
         // Room 数据库初始化
         RoomDb.init(this)
+
+        startService(Intent(this, NotificationService::class.java))
     }
 }

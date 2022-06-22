@@ -24,7 +24,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.neeeel.water_drinking_assistant.database.MyDataStore
 import com.neeeel.water_drinking_assistant.database.RoomDb
 import com.neeeel.water_drinking_assistant.database.bean.Clock
-import com.neeeel.water_drinking_assistant.service.NotificationService
 import com.neeeel.water_drinking_assistant.ui.component.ClockCard
 import com.neeeel.water_drinking_assistant.ui.component.Dialog
 import com.neeeel.water_drinking_assistant.ui.component.TopBar
@@ -55,8 +54,6 @@ class MainActivity : BaseActivity() {
             }
         }
         initList()
-
-        startService(Intent(this, NotificationService::class.java))
     }
 
     /**
