@@ -22,7 +22,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -42,6 +42,21 @@ android {
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+
+    signingConfigs {
+        release {
+            storeFile file("../assistant.jks")
+            storePassword 'assistant'
+            keyAlias 'key0'
+            keyPassword 'assistant'
+        }
+        debug {
+            storeFile file("../assistant.jks")
+            storePassword 'assistant'
+            keyAlias 'key0'
+            keyPassword 'assistant'
         }
     }
 }
